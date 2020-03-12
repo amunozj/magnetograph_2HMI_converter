@@ -1,5 +1,6 @@
 import sys
 import logging
+import warnings
 
 
 
@@ -28,6 +29,16 @@ def get_logger(name):
     logger.addHandler(logfile)
 
     return logger
+
+def disable_warnings():
+    """
+    Disable printing of warnings
+
+    Returns
+    -------
+    None
+    """
+    warnings.simplefilter("ignore")
 
 
     
