@@ -1,0 +1,33 @@
+import sys
+import logging
+
+
+
+def get_logger(name):
+    """
+    Return a logger for current module
+    Returns
+    -------
+
+    logger : logger instance
+
+    """
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(fmt="%(asctime)s %(levelname)s %(name)s: %(message)s",
+                                  datefmt="%Y-%m-%d - %H:%M:%S")
+    console = logging.StreamHandler(sys.stdout)
+    console.setLevel(logging.DEBUG)
+    console.setFormatter(formatter)
+
+    logfile = logging.FileHandler('run.log', 'w')
+    logfile.setLevel(logging.DEBUG)
+    logfile.setFormatter(formatter)
+
+    logger.addHandler(console)
+    logger.addHandler(logfile)
+
+    return logger
+
+
+    
