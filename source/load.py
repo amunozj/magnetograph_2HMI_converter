@@ -23,7 +23,7 @@ def load_from_google_cloud(run_name, epoch, model):
 
     if not os.path.exists(f'checkpoints/{run_name}'):
         logger.info(f'Creating checkpoint folder: checkpoints/{run_name}')
-        os.makedirs(f'checkpoints/{run_name}')
+        os.makedirs(f'checkpoints/{run_name}', exist_ok=True)
     if not os.path.exists(f'checkpoints/{run_name}/epoch_{epoch}'):
         logger.info(f'Downloading checkpoint: {epoch}')
         blob.download_to_filename(f'checkpoints/{run_name}/epoch_{epoch}')

@@ -1,3 +1,5 @@
+import numpy as np
+
 from sunpy.map import Map
 from astropy.io import fits
 from torch.utils.data import Dataset
@@ -30,7 +32,7 @@ class FitsFileDataset(Dataset):
         :return: tensor (W, H, 2)
         """
         patch = self.data[idx, ...]
-        #patch[patch != patch] = 0
+        patch[patch != patch] = 0
         patch = from_numpy(patch).float()
         return patch
 
@@ -52,7 +54,7 @@ class FitsFileDataset(Dataset):
         new_map = Map(new_data, new_meta)
         array_radius = get_array_radius(new_map)
 
-        new_map.data[array_radius >= 1] = 0
+        new_map.data[array_radius >= 0.985] = np.nan
 
         return new_map
 
