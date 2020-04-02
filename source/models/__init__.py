@@ -1,1 +1,3 @@
-from source.models.highresnet import HighResNet
+from source.models.highresnet_rprcdo import HighResNet_RPRCDO
+
+__all__ = ['HighResNet_RPRCDO']
