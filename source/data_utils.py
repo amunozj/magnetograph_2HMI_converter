@@ -5,6 +5,8 @@ from astropy import units as u
 from sklearn.feature_extraction import image
 from sunpy.map import all_pixel_indices_from_map
 
+import matplotlib.pyplot as plt
+
 from source.utils import disable_warnings, get_logger
 
 disable_warnings()
@@ -67,3 +69,48 @@ def get_image_from_array(list_patches):
     out_array = np.concatenate(out_array, axis=1)
 
     return out_array
+
+def plot_magnetogram(amap, scale=1, vmin = -2000, vmax = 2000, cmap = plt.cm.get_cmap('hmimag'), ):
+    """
+    Plot magnetogram
+    :param amap:
+    :return: (W, H) array
+    """
+
+    # Size definitions
+    dpi = 400
+    pxx = amap.data.shape[0] * scale  # Horizontal size of each panel
+    pxy = pxx  # Vertical size of each panel
+
+    nph = 1  # Number of horizontal panels
+    npv = 1  # Number of vertical panels
+
+    # Padding
+    padv = 0  # Vertical padding in pixels
+    padv2 = 0  # Vertical padding in pixels between panels
+    padh = 0  # Horizontal padding in pixels at the edge of the figure
+    padh2 = 0  # Horizontal padding in pixels between panels
+
+    # Figure sizes in pixels
+    fszv = (npv * pxy + 2 * padv + (npv - 1) * padv2)  # Vertical size of figure in pixels
+    fszh = (nph * pxx + 2 * padh + (nph - 1) * padh2)  # Horizontal size of figure in pixels
+
+    # Conversion to relative units
+    ppxx = pxx / fszh  # Horizontal size of each panel in relative units
+    ppxy = pxy / fszv  # Vertical size of each panel in relative units
+    ppadv = padv / fszv  # Vertical padding in relative units
+    ppadv2 = padv2 / fszv  # Vertical padding in relative units
+    ppadh = padh / fszh  # Horizontal padding the edge of the figure in relative units
+    ppadh2 = padh2 / fszh  # Horizontal padding between panels in relative units
+
+    ## Start Figure
+    fig = plt.figure(figsize=(fszh / dpi, fszv / dpi), dpi=dpi)
+
+    # ## Add Perihelion
+    ax1 = fig.add_axes([ppadh + ppxx, ppadv + ppxy, ppxx, ppxy])
+    ax1.imshow(amap.data, vmin=vmin, vmax=vmax, cmap=cmap, origin='lower')
+    ax1.set_axis_off()
+    ax1.text(0.99, 0.99, 'HMI Target', horizontalalignment='right', verticalalignment='top', color='k',
+             transform=ax1.transAxes)
+
+    fig.savefig('Target' + suffix + '_GONG_FD.png', bbox_inches='tight', dpi=dpi, pad_inches=0)

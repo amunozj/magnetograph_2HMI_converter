@@ -13,14 +13,14 @@ class FitsFileDataset(Dataset):
     """
     Construct a dataset of patches from a fits file
     """
-    def __init__(self, file, size):
+    def __init__(self, file, size, norm):
         hdul = fits.open(file, cache=False)
         hdul.verify('fix')
 
         if len(hdul) == 2:
-            map = Map(hdul[1].data, hdul[1].header)
+            map = Map(hdul[1].data/norm, hdul[1].header)
         else:
-            map = Map(hdul[0].data, hdul[0].header)
+            map = Map(hdul[0].data/norm, hdul[0].header)
 
         self.data = get_patch(map, size)
         self.map = map
@@ -39,7 +39,7 @@ class FitsFileDataset(Dataset):
     def __len__(self):
         return self.data.shape[0]
 
-    def create_new_map(self, new_data, scale_factor):
+    def create_new_map(self, new_data, scale_factor, add_noise):
         """
         Adjust header to match upscaling factor
         :return:
@@ -52,8 +52,12 @@ class FitsFileDataset(Dataset):
         new_meta['cdelt2'] = new_meta['cdelt2'] / scale_factor
 
         new_map = Map(new_data, new_meta)
-        array_radius = get_array_radius(new_map)
 
+        if add_noise:
+            noise = np.random.normal(loc=0.0, scale=add_noise, size=new_map.data.shape)
+            new_map.data[:] = new_map.data[:] + noise[:]
+
+        array_radius = get_array_radius(new_map)
         new_map.data[array_radius >= 0.985] = np.nan
 
         return new_map

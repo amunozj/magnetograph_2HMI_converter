@@ -11,7 +11,12 @@ import astropy.units as u
 import sunpy.map
 
 import torch
+from torch.utils.data.dataloader import DataLoader
+
 from source.models.model_manager import BaseScaler
+from source.dataset import FitsFileDataset
+from source.data_utils import get_array_radius
+from source.data_utils import get_image_from_array
 
 def get_logger(name):
     """
@@ -47,6 +52,7 @@ if __name__ == '__main__':
     parser.add_argument('--destination')
     parser.add_argument('--add_noise')
     parser.add_argument('--overwrite', action='store_true')
+    parser.add_argument('--use_patches', action='store_true')
 
 
     args = parser.parse_args()
@@ -66,6 +72,11 @@ if __name__ == '__main__':
     norm = 3500
     if 'normalisation' in data_config.keys():
         norm = data_config['normalisation']
+
+    net_config = config_data['net']
+    upscale_factor = 4
+    if 'upscale_factor' in net_config.keys():
+        upscale_factor = net_config['upscale_factor']
 
     model = BaseScaler.from_dict(config_data)
 
@@ -100,50 +111,44 @@ if __name__ == '__main__':
 
         logger.info(f'Processing {file}')
 
-        IN_fits = fits.open(file, cache=False)
-        IN_fits.verify('fix')
-
-        INmap = sunpy.map.Map(IN_fits[1].data, IN_fits[1].header)
-        IN_fits.close()
-
-        x, y = np.meshgrid(*[np.arange(v.value) for v in INmap.dimensions]) * u.pixel
-        hpc_coords = INmap.pixel_to_world(x, y)
-        rSun = np.sqrt(hpc_coords.Tx ** 2 + hpc_coords.Ty ** 2) / INmap.rsun_obs
-
-        # Mask data and rSun array to be on disk only
-        INmap.data[rSun > 1] = 0
-        rSun[rSun > 1] = 0
-
-        # Load data into correct format and normalise
-        in_fd = np.stack([INmap.data / norm, rSun], axis=0)
-        in_fd = in_fd[None]
-
-        # Transform to tensor and send to CPU
-        in_fd_t = torch.from_numpy(in_fd).to(device).float()
-
-        # Set model to eval mode and run FD inference
-        scale_factor = config_data['net']['upscale_factor']
-
-        new_meta = INmap.meta.copy()
-        new_meta['crpix1'] = new_meta['crpix1'] - INmap.data.shape[0] / 2 + INmap.data.shape[0] * scale_factor / 2
-        new_meta['crpix2'] = new_meta['crpix2'] - INmap.data.shape[1] / 2 + INmap.data.shape[1] * scale_factor / 2
-        new_meta['cdelt1'] = new_meta['cdelt1'] / scale_factor
-        new_meta['cdelt2'] = new_meta['cdelt2'] / scale_factor
-
-        inferred_map = sunpy.map.Map(
-            model.forward(in_fd_t).detach().numpy()[0, ...] * norm, new_meta)
-        x, y = np.meshgrid(*[np.arange(v.value) for v in inferred_map.dimensions]) * u.pixel
-        hpc_coords = inferred_map.pixel_to_world(x, y)
-        rSunI = np.sqrt(hpc_coords.Tx ** 2 + hpc_coords.Ty ** 2) / inferred_map.rsun_obs
-
-        if args.add_noise:
-            noise = np.random.normal(loc=0.0, scale=args.add_noise, size=inferred_map.data.shape)
-            inferred_map.data[:] = inferred_map.data[:] + noise[:]
-
-        inferred_map.data[rSunI > 1] = 0
-        try:
-            inferred_map.save(args.destination + '/' + file.split('/')[-1].split('.')[0] + '_HR.fits')
-        except:
+        if os.path.exists(args.destination + '/' + file.split('/')[-1].split('.')[0] + '_HR.fits') and not args.overwrite:
             logger.info(f'{file} already exists')
 
-        del inferred_map
+        else:
+
+            file_dset = FitsFileDataset(file, 32, norm)
+
+            # Try full disk
+            success_sw = False
+            if not args.use_patches:
+                success_sw = True
+                try:
+                    logger.info(f'Attempting full disk inference...')
+                    in_fd = np.stack([file_dset.map.data, get_array_radius(file_dset.map)], axis=0)
+                    inferred = model.forward(torch.from_numpy(in_fd[None]).to(device).float()).detach().numpy()[0,...]*norm
+                    logger.info(f'Success.')
+
+                except Exception as e:
+                    logger.info(f'Failure. {e}')
+                    success_sw = False
+
+            if not success_sw or args.use_patches:
+                logger.info(f'Attempting inference on patches...')
+                dataloader = DataLoader(file_dset, batch_size=8, shuffle=False)
+
+                output_patches = []
+
+                for input in dataloader:
+
+                    input = input.to(device)
+                    output = model.forward(input) * norm
+
+                    output_patches.append(output.detach().cpu().numpy())
+
+                inferred = get_image_from_array(output_patches)
+                logger.info(f'Success.')
+
+            inferred_map = file_dset.create_new_map(inferred, upscale_factor, args.add_noise)
+            inferred_map.save(args.destination + '/' + file.split('/')[-1].split('.')[0] + '_HR.fits', overwrite=True)
+
+            del inferred_map
