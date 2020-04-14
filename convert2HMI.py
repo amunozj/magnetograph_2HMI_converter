@@ -54,6 +54,7 @@ if __name__ == '__main__':
     parser.add_argument('--overwrite', action='store_true')
     parser.add_argument('--use_patches', action='store_true')
     parser.add_argument('--zero_outside', action='store_true')
+    parser.add_argument('--no_rescale', action='store_true')
 
 
     args = parser.parse_args()
@@ -77,6 +78,10 @@ if __name__ == '__main__':
     padding = np.nan
     if args.zero_outside:
         padding = 0
+
+    rescale = True
+    if args.no_rescale:
+        rescale = False
 
     net_config = config_data['net']
     model_name = net_config['name']
@@ -117,12 +122,13 @@ if __name__ == '__main__':
 
         logger.info(f'Processing {file}')
 
-        if os.path.exists(args.destination + '/' + file.split('/')[-1].split('.')[0] + '_HR.fits') and not args.overwrite:
+        output_file = args.destination + '/' + '.'.join(file.split('/')[-1].split('.')[0:-1]) + '_HR.fits'
+        if os.path.exists(output_file) and not args.overwrite:
             logger.info(f'{file} already exists')
 
         else:
 
-            file_dset = FitsFileDataset(file, 32, norm)
+            file_dset = FitsFileDataset(file, 32, norm, instrument, rescale)
 
             # Try full disk
             success_sw = False
@@ -155,6 +161,6 @@ if __name__ == '__main__':
                 logger.info(f'Success.')
 
             inferred_map = file_dset.create_new_map(inferred, upscale_factor, args.add_noise, model_name, config_data, padding)
-            inferred_map.save(args.destination + '/' + file.split('/')[-1].split('.')[0] + '_HR.fits', overwrite=True)
+            inferred_map.save(output_file, overwrite=True)
 
             del inferred_map

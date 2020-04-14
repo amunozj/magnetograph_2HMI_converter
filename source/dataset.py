@@ -1,27 +1,26 @@
 import numpy as np
 
-from sunpy.map import Map
-from astropy.io import fits
+
 from torch.utils.data import Dataset
 from torch import from_numpy
 from sunpy.map import Map
 from datetime import datetime
 
-from source.data_utils import get_patch, get_array_radius
+from source.data_utils import get_patch, get_array_radius, map_prep, scale_rotate
 
 
 class FitsFileDataset(Dataset):
     """
     Construct a dataset of patches from a fits file
     """
-    def __init__(self, file, size, norm):
-        hdul = fits.open(file, cache=False)
-        hdul.verify('fix')
+    def __init__(self, file, size, norm, instrument, rescale):
 
-        if len(hdul) == 2:
-            map = Map(hdul[1].data/norm, hdul[1].header)
-        else:
-            map = Map(hdul[0].data/norm, hdul[0].header)
+        map = map_prep(file, instrument)
+        map.data[:] = map.data[:]/norm
+
+        # Detecting need for rescale
+        if rescale and np.abs(1 - (map.meta['cdelt1']/0.504273)/np.round(map.meta['cdelt1']/0.504273)) > 0.01:
+            map = scale_rotate(map)
 
         self.data = get_patch(map, size)
         self.map = map
@@ -47,20 +46,40 @@ class FitsFileDataset(Dataset):
         """
 
         new_meta = self.map.meta.copy()
+
+        # Changing scale and center
         new_meta['crpix1'] = new_meta['crpix1'] - self.map.data.shape[0] / 2 + self.map.data.shape[0] * scale_factor / 2
         new_meta['crpix2'] = new_meta['crpix2'] - self.map.data.shape[1] / 2 + self.map.data.shape[1] * scale_factor / 2
         new_meta['cdelt1'] = new_meta['cdelt1'] / scale_factor
         new_meta['cdelt2'] = new_meta['cdelt2'] / scale_factor
+        new_meta['im_scale'] = new_meta['im_scale'] / scale_factor
+        new_meta['fd_scale'] = new_meta['im_scale'] / scale_factor
+        new_meta['xscale'] = new_meta['xscale'] / scale_factor
+        new_meta['yscale'] = new_meta['yscale'] / scale_factor
         new_meta['naxis1'] = self.map.data.shape[0]
         new_meta['naxis2'] = self.map.data.shape[1]
 
+        # Changing data info
+        new_meta['datamin'] = np.nanmin(self.map.data)
+        new_meta['datamax'] = np.nanmax(self.map.data)
+        new_meta['data_rms'] = np.sqrt(np.nanmean(self.map.data**2))
+        new_meta['datamean'] = np.nanmean(self.map.data)
+        new_meta['datamedn'] = np.nanmedian(self.map.data)
+        new_meta['dataskew'] = np.nanmedian(self.map.data)
+
+
         # Add keywords related to conversion
-        new_meta['telescop'] = new_meta['telescop'] + '-2HMI_HR'
+        if new_meta['instrume']:
+            new_meta['instrume'] = new_meta['instrume'] + '-2HMI_HR'
+        else:
+            new_meta['instrume'] = new_meta['telescop'] + '-2HMI_HR'
+
         new_meta['hrkey1'] = '---------------- HR ML Keywords Section ----------------'
-        new_meta['date-conv'] = str(datetime.utcnow())
+        new_meta['date-ml'] = str(datetime.utcnow())
         new_meta['nn-model'] = model_name
         new_meta['loss'] = ', '.join('{!s}={!r}'.format(key, val) for (key, val) in config_data['loss'].items())
-        new_meta['converter_doi'] = 'https://doi.org/10.5281/zenodo.3750373'
+        new_meta['conv_doi'] = 'https://doi.org/10.5281/zenodo.3750373'
+        new_meta['hrkey2'] = '---------------- HR ML Keywords Section ----------------'
 
         new_map = Map(new_data, new_meta)
 
