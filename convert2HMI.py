@@ -74,6 +74,7 @@ if __name__ == '__main__':
         norm = data_config['normalisation']
 
     net_config = config_data['net']
+    model_name = net_config['name']
     upscale_factor = 4
     if 'upscale_factor' in net_config.keys():
         upscale_factor = net_config['upscale_factor']
@@ -148,7 +149,7 @@ if __name__ == '__main__':
                 inferred = get_image_from_array(output_patches)
                 logger.info(f'Success.')
 
-            inferred_map = file_dset.create_new_map(inferred, upscale_factor, args.add_noise)
+            inferred_map = file_dset.create_new_map(inferred, upscale_factor, args.add_noise, model_name, config_data)
             inferred_map.save(args.destination + '/' + file.split('/')[-1].split('.')[0] + '_HR.fits', overwrite=True)
 
             del inferred_map

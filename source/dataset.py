@@ -5,6 +5,7 @@ from astropy.io import fits
 from torch.utils.data import Dataset
 from torch import from_numpy
 from sunpy.map import Map
+from datetime import datetime
 
 from source.data_utils import get_patch, get_array_radius
 
@@ -39,9 +40,9 @@ class FitsFileDataset(Dataset):
     def __len__(self):
         return self.data.shape[0]
 
-    def create_new_map(self, new_data, scale_factor, add_noise):
+    def create_new_map(self, new_data, scale_factor, add_noise,  model_name, config_data):
         """
-        Adjust header to match upscaling factor
+        Adjust header to match upscaling factor and add new keywords
         :return:
         """
 
@@ -50,6 +51,16 @@ class FitsFileDataset(Dataset):
         new_meta['crpix2'] = new_meta['crpix2'] - self.map.data.shape[1] / 2 + self.map.data.shape[1] * scale_factor / 2
         new_meta['cdelt1'] = new_meta['cdelt1'] / scale_factor
         new_meta['cdelt2'] = new_meta['cdelt2'] / scale_factor
+        new_meta['naxis1'] = self.map.data.shape[0]
+        new_meta['naxis2'] = self.map.data.shape[1]
+
+        # Add keywords related to conversion
+        new_meta['telescop'] = new_meta['telescop'] + '-2HMI_HR'
+        new_meta['hrkey1'] = '---------------- HR ML Keywords Section ----------------'
+        new_meta['date-conv'] = str(datetime.utcnow())
+        new_meta['nn-model'] = model_name
+        new_meta['loss'] = ', '.join('{!s}={!r}'.format(key, val) for (key, val) in config_data['loss'].items())
+        new_meta['converter_doi'] = 'https://doi.org/10.5281/zenodo.3750373'
 
         new_map = Map(new_data, new_meta)
 
@@ -58,7 +69,7 @@ class FitsFileDataset(Dataset):
             new_map.data[:] = new_map.data[:] + noise[:]
 
         array_radius = get_array_radius(new_map)
-        new_map.data[array_radius >= 0.985] = np.nan
+        new_map.data[array_radius >= 1] = np.nan
 
         return new_map
 
