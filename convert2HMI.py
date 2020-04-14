@@ -53,6 +53,7 @@ if __name__ == '__main__':
     parser.add_argument('--add_noise')
     parser.add_argument('--overwrite', action='store_true')
     parser.add_argument('--use_patches', action='store_true')
+    parser.add_argument('--zero_outside', action='store_true')
 
 
     args = parser.parse_args()
@@ -72,6 +73,10 @@ if __name__ == '__main__':
     norm = 3500
     if 'normalisation' in data_config.keys():
         norm = data_config['normalisation']
+
+    padding = np.nan
+    if args.zero_outside:
+        padding = 0
 
     net_config = config_data['net']
     model_name = net_config['name']
@@ -149,7 +154,7 @@ if __name__ == '__main__':
                 inferred = get_image_from_array(output_patches)
                 logger.info(f'Success.')
 
-            inferred_map = file_dset.create_new_map(inferred, upscale_factor, args.add_noise, model_name, config_data)
+            inferred_map = file_dset.create_new_map(inferred, upscale_factor, args.add_noise, model_name, config_data, padding)
             inferred_map.save(args.destination + '/' + file.split('/')[-1].split('.')[0] + '_HR.fits', overwrite=True)
 
             del inferred_map

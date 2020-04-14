@@ -40,7 +40,7 @@ class FitsFileDataset(Dataset):
     def __len__(self):
         return self.data.shape[0]
 
-    def create_new_map(self, new_data, scale_factor, add_noise,  model_name, config_data):
+    def create_new_map(self, new_data, scale_factor, add_noise,  model_name, config_data, padding):
         """
         Adjust header to match upscaling factor and add new keywords
         :return:
@@ -69,7 +69,7 @@ class FitsFileDataset(Dataset):
             new_map.data[:] = new_map.data[:] + noise[:]
 
         array_radius = get_array_radius(new_map)
-        new_map.data[array_radius >= 1] = np.nan
+        new_map.data[array_radius >= 1] = padding
 
         return new_map
 
