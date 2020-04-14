@@ -45,5 +45,5 @@ The converter magnetogram contains the following added keywords:
 
 ***'--use_patches'***:  Run inference on magnetogram patches instead of the default full disk inference.
 
-### Example:
+## Example:
 >python convert2HMI.py --instrument gong --data_path /tmp/gong/input --destination /tmp/gong/output --use_patches --overwrite
