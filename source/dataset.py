@@ -52,10 +52,16 @@ class FitsFileDataset(Dataset):
         new_meta['crpix2'] = new_meta['crpix2'] - self.map.data.shape[1] / 2 + self.map.data.shape[1] * scale_factor / 2
         new_meta['cdelt1'] = new_meta['cdelt1'] / scale_factor
         new_meta['cdelt2'] = new_meta['cdelt2'] / scale_factor
-        new_meta['im_scale'] = new_meta['im_scale'] / scale_factor
-        new_meta['fd_scale'] = new_meta['im_scale'] / scale_factor
-        new_meta['xscale'] = new_meta['xscale'] / scale_factor
-        new_meta['yscale'] = new_meta['yscale'] / scale_factor
+
+        try:
+            new_meta['im_scale'] = new_meta['im_scale'] / scale_factor
+            new_meta['fd_scale'] = new_meta['im_scale'] / scale_factor
+            new_meta['xscale'] = new_meta['xscale'] / scale_factor
+            new_meta['yscale'] = new_meta['yscale'] / scale_factor
+
+        except:
+            pass
+
         new_meta['naxis1'] = self.map.data.shape[0]
         new_meta['naxis2'] = self.map.data.shape[1]
 
