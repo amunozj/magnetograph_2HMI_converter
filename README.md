@@ -39,7 +39,9 @@ The converter magnetogram contains the following added keywords:
 
 ### Optional
 
-***'--add_noise'***: Variance of the gaussian noise (in gauss) to be added to the output magnetogram.  By default no noise is added.  For HMI noise use 4.7.
+***'--add_noise'***: Variance of the gaussian noise (in gauss) to be added to the output magnetogram.  By default no noise is added.  For noise similar to HMI use 4.7.
+
+***'--plot'***: Make a plot of the output magnetogram.
 
 ***'--overwrite'***: Flag to overwrite files in output folder.  Files are not overwritten by default.
 
@@ -50,4 +52,4 @@ The converter magnetogram contains the following added keywords:
 ***'--no_rescale'***: Don't rescale the magnetogram before running inference.  By default the magnetogram is rotated and scaled to a standard plate scale that is a multiple of HMI's mean plate scale of 0.504273/pixel. 
 
 ## Example:
->python convert2HMI.py --instrument gong --data_path /tmp/gong/input --destination /tmp/gong/output --use_patches --overwrite
+>python convert2HMI.py --instrument mdi --data_path /tmp/gong/input --destination /tmp/gong/output --use_patches --overwrite --plot
