@@ -84,7 +84,7 @@ class FitsFileDataset(Dataset):
         new_meta['date-ml'] = str(datetime.utcnow())
         new_meta['nn-model'] = model_name
         new_meta['loss'] = ', '.join('{!s}={!r}'.format(key, val) for (key, val) in config_data['loss'].items())
-        new_meta['conv_doi'] = 'https://doi.org/10.5281/zenodo.3750373'
+        new_meta['conv_doi'] = 'https://doi.org/10.5281/zenodo.3750372'
         new_meta['hrkey2'] = '---------------- HR ML Keywords Section ----------------'
 
         new_map = Map(new_data, new_meta)
