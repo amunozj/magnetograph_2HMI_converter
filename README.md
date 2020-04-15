@@ -17,7 +17,7 @@ Currently only working on magnetograms taken by the Michelson Doppler Imager (MD
 
 The converter magnetogram contains the following added keywords:
 
-***'telescop'***:  Old value is retained, but with the appended '-2HMI_HR' suffix.
+***'instrume'***:  Old value is retained, but with the appended '-2HMI_HR' suffix.
 
 ***'date-conv'***:  UTC date of conversion.
 
