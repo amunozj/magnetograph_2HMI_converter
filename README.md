@@ -39,7 +39,7 @@ The converter magnetogram contains the following added keywords:
 
 ### Optional
 
-***'--add_noise'***: Variance of the gaussian noise (in gauss) to be added to the output magnetogram.  By default no noise is added.  For HMI noise use 4.7.
+***'--add_noise'***: Variance of the gaussian noise (in gauss) to be added to the output magnetogram.  By default no noise is added.  For noise similar to HMI 4.7.
 
 ***'--plot'***: Make a plot of the output magnetogram.
 
