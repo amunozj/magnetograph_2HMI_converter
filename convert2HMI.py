@@ -15,8 +15,7 @@ from torch.utils.data.dataloader import DataLoader
 
 from source.models.model_manager import BaseScaler
 from source.dataset import FitsFileDataset
-from source.data_utils import get_array_radius
-from source.data_utils import get_image_from_array
+from source.data_utils import get_array_radius, get_image_from_array, plot_magnetogram
 
 def get_logger(name):
     """
@@ -51,6 +50,7 @@ if __name__ == '__main__':
     parser.add_argument('--data_path')
     parser.add_argument('--destination')
     parser.add_argument('--add_noise')
+    parser.add_argument('--plot', action='store_true')
     parser.add_argument('--overwrite', action='store_true')
     parser.add_argument('--use_patches', action='store_true')
     parser.add_argument('--zero_outside', action='store_true')
@@ -122,13 +122,13 @@ if __name__ == '__main__':
 
         logger.info(f'Processing {file}')
 
-        output_file = args.destination + '/' + '.'.join(file.split('/')[-1].split('.')[0:-1]) + '_HR.fits'
-        if os.path.exists(output_file) and not args.overwrite:
+        output_file = args.destination + '/' + '.'.join(file.split('/')[-1].split('.gz')[0].split('.')[0:-1])
+        if os.path.exists(output_file + '_HR.fits') and not args.overwrite:
             logger.info(f'{file} already exists')
 
         else:
 
-            file_dset = FitsFileDataset(file, 32, norm, instrument, rescale)
+            file_dset = FitsFileDataset(file, 32, norm, instrument, rescale, upscale_factor)
 
             # Try full disk
             success_sw = False
@@ -161,6 +161,9 @@ if __name__ == '__main__':
                 logger.info(f'Success.')
 
             inferred_map = file_dset.create_new_map(inferred, upscale_factor, args.add_noise, model_name, config_data, padding)
-            inferred_map.save(output_file, overwrite=True)
+            inferred_map.save(output_file + '_HR.fits', overwrite=True)
+
+            if args.plot:
+                plot_magnetogram(inferred_map, output_file + '_HR.png')
 
             del inferred_map

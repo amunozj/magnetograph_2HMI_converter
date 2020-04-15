@@ -13,14 +13,14 @@ class FitsFileDataset(Dataset):
     """
     Construct a dataset of patches from a fits file
     """
-    def __init__(self, file, size, norm, instrument, rescale):
+    def __init__(self, file, size, norm, instrument, rescale, upscale_factor):
 
         map = map_prep(file, instrument)
         map.data[:] = map.data[:]/norm
 
         # Detecting need for rescale
-        if rescale and np.abs(1 - (map.meta['cdelt1']/0.504273)/np.round(map.meta['cdelt1']/0.504273)) > 0.01:
-            map = scale_rotate(map)
+        if rescale and np.abs(1 - (map.meta['cdelt1']/0.504273)/upscale_factor) > 0.01:
+            map = scale_rotate(map, target_factor=upscale_factor)
 
         self.data = get_patch(map, size)
         self.map = map
@@ -69,9 +69,9 @@ class FitsFileDataset(Dataset):
 
 
         # Add keywords related to conversion
-        if new_meta['instrume']:
+        try:
             new_meta['instrume'] = new_meta['instrume'] + '-2HMI_HR'
-        else:
+        except:
             new_meta['instrume'] = new_meta['telescop'] + '-2HMI_HR'
 
         new_meta['hrkey1'] = '---------------- HR ML Keywords Section ----------------'

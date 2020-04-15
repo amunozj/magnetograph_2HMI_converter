@@ -72,6 +72,7 @@ def map_prep(file, instrument, *keyward_args):
 
         if instrument == 'gong':
 
+            header = hdul[0].header
             if len(header['DATE-OBS'])<22:
                 header['RSUN_OBS'] = header['RADIUS'] * 180 / np.pi * 60 * 60
                 header['RSUN_REF'] = 696000000
@@ -393,7 +394,7 @@ def plot_magnetogram(amap, file, scale=1, vmin=-2000, vmax=2000, cmap=plt.cm.get
     ax1 = fig.add_axes([ppadh + ppxx, ppadv + ppxy, ppxx, ppxy])
     ax1.imshow(amap.data, vmin=vmin, vmax=vmax, cmap=cmap, origin='lower')
     ax1.set_axis_off()
-    ax1.text(0.99, 0.99, 'HMI Target', horizontalalignment='right', verticalalignment='top', color='k',
+    ax1.text(0.99, 0.99, 'ML Output', horizontalalignment='right', verticalalignment='top', color='k',
              transform=ax1.transAxes)
 
     fig.savefig(file, bbox_inches='tight', dpi=dpi, pad_inches=0)
