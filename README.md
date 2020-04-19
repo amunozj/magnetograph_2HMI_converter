@@ -2,6 +2,9 @@
 
 Currently only working on magnetograms taken by the Michelson Doppler Imager (MDI) on board the Solar and Heliospheric Observatory (SoHO) or the Global Oscillation Network Group (GONG).  Output magnetograms have the resolution and systematics of magnetograms taken by the Helioseismic and Magnetic Imager (HMI) on board the Solar Dynamics Observatory (SDO).
 
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3750372.svg)](https://doi.org/10.5281/zenodo.3750372)
+
 ## Installation
 
 1. Click on the _Clone or download_ button and clone it to a repository or download it as a zip file.
