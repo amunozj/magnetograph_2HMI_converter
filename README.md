@@ -50,7 +50,7 @@ The converter magnetogram contains the following added keywords:
 
 ***'--use_patches'***:  Run inference on magnetogram patches instead of the default full disk inference.
 
-***'--zero_outside'***: Padd outside the solar disk using zeros.  Default *np.nan*.
+***'--zero_outside'***: Pad outside the solar disk using zeros.  Default *np.nan*.
 
 ***'--no_rescale'***: Don't rescale the magnetogram before running inference.  By default the magnetogram is rotated and scaled to a standard plate scale that is a multiple of HMI's mean plate scale of 0.504273/pixel. 
 
