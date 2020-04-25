@@ -1,35 +1,44 @@
-import numpy as np
-
-
-from torch.utils.data import Dataset
-from torch import from_numpy
-from sunpy.map import Map
 from datetime import datetime
 
-from source.data_utils import get_patch, get_array_radius, map_prep, scale_rotate
+import numpy as np
+from sunpy.map import Map
+from torch import from_numpy
+from torch.utils.data import Dataset
+
+from source.data_utils import get_patches, get_array_radius, map_prep, scale_rotate
 
 
 class FitsFileDataset(Dataset):
     """
     Construct a dataset of patches from a fits file
     """
+
     def __init__(self, file, size, norm, instrument, rescale, upscale_factor):
 
         map = map_prep(file, instrument)
-        map.data[:] = map.data[:]/norm
+        map.data[:] = map.data[:] / norm
 
         # Detecting need for rescale
-        if rescale and np.abs(1 - (map.meta['cdelt1']/0.504273)/upscale_factor) > 0.01:
+        if rescale and np.abs(1 - (map.meta['cdelt1'] / 0.504273) / upscale_factor) > 0.01:
             map = scale_rotate(map, target_factor=upscale_factor)
 
-        self.data = get_patch(map, size)
+        self.data = get_patches(map, size)
         self.map = map
+
 
     def __getitem__(self, idx):
         """
-        Create torch tensor from patch with id idx
-        :param idx:
-        :return: tensor (W, H, 2)
+        Get a patch
+
+        Parameters
+        ----------
+        idx : int
+            Index
+
+        Returns
+        -------
+        torch.tensor
+            patch
         """
         patch = self.data[idx, ...]
         patch[patch != patch] = 0
@@ -39,17 +48,33 @@ class FitsFileDataset(Dataset):
     def __len__(self):
         return self.data.shape[0]
 
-    def create_new_map(self, new_data, scale_factor, add_noise,  model_name, config_data, padding):
+    def create_new_map(self, new_data, scale_factor, add_noise, model_name, config_data, padding):
         """
         Adjust header to match upscaling factor and add new keywords
-        :return:
+
+        Parameters
+        ----------
+        new_data :
+            Superresolved map data
+        scale_factor : int
+            Upscaling factor
+        add_noise : bool
+            True add noise to superreolved image
+        model_name : str
+            Name of the model use
+        config_data : dict
+            Configuration parameters
+        padding :
+
         """
 
         new_meta = self.map.meta.copy()
 
         # Changing scale and center
-        new_meta['crpix1'] = new_meta['crpix1'] - self.map.data.shape[0] / 2 + self.map.data.shape[0] * scale_factor / 2
-        new_meta['crpix2'] = new_meta['crpix2'] - self.map.data.shape[1] / 2 + self.map.data.shape[1] * scale_factor / 2
+        new_meta['crpix1'] = (new_meta['crpix1'] - self.map.data.shape[0] / 2
+                              + self.map.data.shape[0] * scale_factor / 2)
+        new_meta['crpix2'] = (new_meta['crpix2'] - self.map.data.shape[1] / 2
+                              + self.map.data.shape[1] * scale_factor / 2)
         new_meta['cdelt1'] = new_meta['cdelt1'] / scale_factor
         new_meta['cdelt2'] = new_meta['cdelt2'] / scale_factor
 
@@ -68,11 +93,10 @@ class FitsFileDataset(Dataset):
         # Changing data info
         new_meta['datamin'] = np.nanmin(self.map.data)
         new_meta['datamax'] = np.nanmax(self.map.data)
-        new_meta['data_rms'] = np.sqrt(np.nanmean(self.map.data**2))
+        new_meta['data_rms'] = np.sqrt(np.nanmean(self.map.data ** 2))
         new_meta['datamean'] = np.nanmean(self.map.data)
         new_meta['datamedn'] = np.nanmedian(self.map.data)
         new_meta['dataskew'] = np.nanmedian(self.map.data)
-
 
         # Add keywords related to conversion
         try:
@@ -83,7 +107,8 @@ class FitsFileDataset(Dataset):
         new_meta['hrkey1'] = '---------------- HR ML Keywords Section ----------------'
         new_meta['date-ml'] = str(datetime.utcnow())
         new_meta['nn-model'] = model_name
-        new_meta['loss'] = ', '.join('{!s}={!r}'.format(key, val) for (key, val) in config_data['loss'].items())
+        new_meta['loss'] = ', '.join(
+            '{!s}={!r}'.format(key, val) for (key, val) in config_data['loss'].items())
         new_meta['conv_doi'] = 'https://doi.org/10.5281/zenodo.3750372'
         new_meta['hrkey2'] = '---------------- HR ML Keywords Section ----------------'
 
@@ -97,7 +122,3 @@ class FitsFileDataset(Dataset):
         new_map.data[array_radius >= 1] = padding
 
         return new_map
-
-
-
-

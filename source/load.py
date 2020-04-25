@@ -7,9 +7,11 @@ from source.utils import get_logger
 
 logger = get_logger(__name__)
 
+
 def load_from_google_cloud(run_name, epoch, model):
     """
-    Construct a torch model from pe-trained model run_name stored on goolge cloud
+    Construct a torch model from pe-trained model run_name stored on goolge cloud.
+
     :param run_name: string
     :param epoch: int
     :param model: torch model

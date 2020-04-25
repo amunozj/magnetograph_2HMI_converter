@@ -3,10 +3,10 @@ import logging
 import warnings
 
 
-
 def get_logger(name):
     """
-    Return a logger for current module
+    Return a logger for current module.
+
     Returns
     -------
 
@@ -30,6 +30,7 @@ def get_logger(name):
 
     return logger
 
+
 def disable_warnings():
     """
     Disable printing of warnings
@@ -39,6 +40,3 @@ def disable_warnings():
     None
     """
     warnings.simplefilter("ignore")
-
-
-    
