@@ -55,4 +55,4 @@ The converter magnetogram contains the following added keywords:
 ***'--no_rescale'***: Don't rescale the magnetogram before running inference.  By default the magnetogram is rotated and scaled to a standard plate scale that is a multiple of HMI's mean plate scale of 0.504273/pixel. 
 
 ## Example:
->python convert2HMI.py --instrument mdi --data_path /tmp/gong/input --destination /tmp/gong/output --use_patches --overwrite --plot
+>python convert2HMI.py --instrument mdi --data_path /tmp/mdi/input --destination /tmp/mdi/output --use_patches --overwrite --plot
