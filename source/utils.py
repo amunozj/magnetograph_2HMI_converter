@@ -9,16 +9,15 @@ def get_logger(name):
 
     Returns
     -------
-
-    logger : logger instance
-
+    logging.Logger
+        Logger instance
     """
     logger = logging.getLogger(name)
     logger.setLevel(logging.DEBUG)
     formatter = logging.Formatter(fmt="%(asctime)s %(levelname)s %(name)s: %(message)s",
                                   datefmt="%Y-%m-%d - %H:%M:%S")
     console = logging.StreamHandler(sys.stdout)
-    console.setLevel(logging.DEBUG)
+    console.setLevel(logging.INFO)
     console.setFormatter(formatter)
 
     logfile = logging.FileHandler('run.log', 'w')

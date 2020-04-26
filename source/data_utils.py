@@ -1,13 +1,12 @@
 import numpy as np
-import math
 
 from astropy import units as u
-from sklearn.feature_extraction import image
 from astropy.coordinates import SkyCoord
-from sunpy.map import Map
 from astropy.io import fits
-
-import matplotlib.pyplot as plt
+from matplotlib import pyplot as plt
+from sklearn.feature_extraction import image
+from sunpy.cm import cm as scm
+from sunpy.map import Map
 
 from source.utils import disable_warnings, get_logger
 
@@ -15,22 +14,21 @@ disable_warnings()
 logger = get_logger(__name__)
 
 
-def map_prep(file, instrument, *keyward_args):
+def map_prep(file, instrument):
     """
-    Return a processed hmi magnetogram and path
+    Return a processed magnetogram
 
     Parameters
     ----------
-    file : file desctiptor
-    instrument: string
-
-    keyward_args :
+    file : str
+        File to prep
+    instrument : str
+        Instrument name
 
     Returns
-
-    tuple : preped map and filepath
     -------
-
+    sunpy.map.Map
+        Preped map and filepath
     """
 
     # Open fits file as HUDL and fix header
@@ -70,7 +68,7 @@ def map_prep(file, instrument, *keyward_args):
             pass
 
     elif instrument == 'gong':
-        if len(header['DATE-OBS'])<22:
+        if len(header['DATE-OBS']) < 22:
             header['RSUN_OBS'] = header['RADIUS'] * 180 / np.pi * 60 * 60
             header['RSUN_REF'] = 696000000
             header['CROTA2'] = 0
@@ -86,7 +84,7 @@ def map_prep(file, instrument, *keyward_args):
 
             date = header['DATE-OBS']
             header['DATE-OBS'] = date[0:4] + '-' + date[5:7] + '-' + date[8:10] + 'T' +\
-                                 header['TIME-OBS'][0:11]
+                header['TIME-OBS'][0:11]
 
     sun_map = Map(data, header)
 
@@ -98,30 +96,37 @@ def scale_rotate(amap, target_scale=0.504273, target_factor=0):
 
     Parameters
     ----------
-    amap
+    amap : sunpy.map.Map
+        Input map
+    target_factor : float
+
+    target_scale : int
+
 
     Returns
     -------
-
+    sunpy.map.Map
+        Scaled and rotated map
     """
 
     scalex = amap.meta['cdelt1']
     scaley = amap.meta['cdelt2']
+    if scalex != scaley:
+        raise ValueError('Square pixels expected')
 
     # Calculate target factor if not provided
     if target_factor == 0:
         target_factor = np.round(scalex / target_scale)
 
     ratio_plate = target_factor * target_scale / scalex
-    # logger.info(np.round(scalex / target_scale) / scalex * target_scale)
+    logger.debug(np.round(scalex / target_scale) / scalex * target_scale)
     ratio_dist = amap.meta['dsun_obs'] / amap.meta['dsun_ref']
-    # logger.info(ratio_dist)
+    logger.debug(ratio_dist)
 
     # Pad image, if necessary
     new_shape = int(4096/target_factor)
 
     # Reform map to new size if original shape is too small
-
     if new_shape > amap.data.shape[0]:
 
         new_fov = np.zeros((new_shape, new_shape)) * np.nan
@@ -147,7 +152,7 @@ def scale_rotate(amap, target_scale=0.504273, target_factor=0):
     x_scale = ((rot_map.scale.axis1 * amap.dimensions.x) / 2)
     y_scale = ((rot_map.scale.axis2 * amap.dimensions.y) / 2)
 
-    # logger.info(f'x-scale {x_scale}, y-scale {y_scale}')
+    logger.debug(f'x-scale {x_scale}, y-scale {y_scale}')
 
     if x_scale != y_scale:
         logger.error(f'x-scale: {x_scale} and y-scale {y_scale} do not match')
@@ -239,7 +244,7 @@ def get_image_from_patches(list_patches):
     out = np.array(list_patches)
     out_r = out.reshape(out.shape[0] * out.shape[1], out.shape[2], out.shape[3])
 
-    size = int(math.sqrt(out_r.shape[0]))
+    size = int(np.sqrt(out_r.shape[0]))
     out_array = np.array_split(out_r, size, axis=0)
     out_array = np.concatenate(out_array, axis=1)
     out_array = np.concatenate(out_array, axis=1)
@@ -247,10 +252,24 @@ def get_image_from_patches(list_patches):
     return out_array
 
 
-def plot_magnetogram(amap, file, scale=1, vmin=-2000, vmax=2000, cmap=plt.cm.get_cmap('hmimag')):
+def plot_magnetogram(amap, file, scale=1, vmin=-2000, vmax=2000, cmap=scm.hmimag):
     """
     Plot magnetogram
 
+    Parameters
+    ----------
+    amap : sunpy.map.Map
+        Magnetogram map to plot
+    file : pathlib.Path
+        Filename to save plot as
+    scale :
+
+    vmin : float
+        Min value for color map
+    vmax : float
+        Max value for color map
+    cmap : matplotlib.colors.Colormap
+        Colormap
     """
 
     # Size definitions
@@ -275,11 +294,13 @@ def plot_magnetogram(amap, file, scale=1, vmin=-2000, vmax=2000, cmap=plt.cm.get
     ppxx = pxx / fszh  # Horizontal size of each panel in relative units
     ppxy = pxy / fszv  # Vertical size of each panel in relative units
     ppadv = padv / fszv  # Vertical padding in relative units
-    ppadv2 = padv2 / fszv  # Vertical padding in relative units
+    # Never used so commented out
+    # ppadv2 = padv2 / fszv  # Vertical padding in relative units
     ppadh = padh / fszh  # Horizontal padding the edge of the figure in relative units
-    ppadh2 = padh2 / fszh  # Horizontal padding between panels in relative units
+    # Never used so commented out
+    # ppadh2 = padh2 / fszh  # Horizontal padding between panels in relative units
 
-    ## Start Figure
+    # Start Figure
     fig = plt.figure(figsize=(fszh / dpi, fszv / dpi), dpi=dpi)
 
     # ## Add Perihelion
@@ -290,6 +311,3 @@ def plot_magnetogram(amap, file, scale=1, vmin=-2000, vmax=2000, cmap=plt.cm.get
              color='k', transform=ax1.transAxes)
 
     fig.savefig(file, bbox_inches='tight', dpi=dpi, pad_inches=0)
-
-
-
