@@ -61,7 +61,7 @@ if __name__ == '__main__':
     instrument = args.instrument.lower()
 
     if instrument == 'mdi':
-        run = 'checkpoints/mdi/20200312194454_HighResNet_RPRCDO_SSIMGradHistLoss_mdi_19'
+        run = 'checkpoints/mdi/20200501145532_HighResNet_RPRCDO_SSIMGradHistLoss_mdi_18_jsoc'
     elif instrument == 'gong':
         run = 'checkpoints/gong/20200321142757_HighResNet_RPRCDO_SSIMGradHistLoss_gong_1'
     else:
