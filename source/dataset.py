@@ -99,7 +99,8 @@ class FitsFileDataset(Dataset):
         array_radius = get_array_radius(new_map)
         new_map.data[array_radius >= 1] = padding
 
-
+        new_map.meta['tot_flux'] = np.sum(np.abs(new_data[array_radius <= 0.95]))
+        new_map.meta['avg_flux'] = new_map.meta['tot_flux']/np.sum(array_radius[:] <= 0.95)
 
         return new_map
 
