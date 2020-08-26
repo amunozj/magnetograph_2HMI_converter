@@ -55,6 +55,7 @@ if __name__ == '__main__':
     parser.add_argument('--use_patches', action='store_true')
     parser.add_argument('--zero_outside', action='store_true')
     parser.add_argument('--no_rescale', action='store_true')
+    parser.add_argument('--compress', action='store_true')
 
 
     args = parser.parse_args()
@@ -161,7 +162,13 @@ if __name__ == '__main__':
                 logger.info(f'Success.')
 
             inferred_map = file_dset.create_new_map(inferred, upscale_factor, args.add_noise, model_name, config_data, padding)
-            inferred_map.save(output_file + '_HR.fits', overwrite=True)
+
+            if args.compress:
+                hdu = fits.CompImageHDU(inferred_map.data, inferred_map.fits_header)
+                hdu.scale(type='int32', bscale=0.1, bzero=0)
+                hdu.writeto(output_file + '_HR.fits', overwrite=True, checksum=True)
+            else:
+                inferred_map.save(output_file + '_HR.fits', overwrite=True, checksum=True)
 
             if args.plot:
                 plot_magnetogram(inferred_map, output_file + '_HR.png')

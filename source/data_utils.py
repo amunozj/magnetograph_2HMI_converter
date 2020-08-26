@@ -44,7 +44,9 @@ def map_prep(file, instrument, *keyward_args):
     # Assemble Sunpy map (compressed fits file so use second hdu)
 
     if len(hdul) == 2:
-        sun_map = Map(hdul[1].data, hdul[1].header)
+
+        header = hdul[1].header
+        data = hdul[1].data
 
     elif len(hdul) == 1:
         if instrument == 'mdi':
@@ -210,7 +212,12 @@ def map_prep(file, instrument, *keyward_args):
             # selecting right layer for data
             data = hdul[0].data
 
-        sun_map = Map(data, header)
+    try:
+        header.pop('checksum')
+        header.pop('datasum')
+    except:
+        pass
+    sun_map = Map(data, header)
 
     return sun_map
 
@@ -253,8 +260,8 @@ def scale_rotate(amap, target_scale=0.504273, target_factor=0):
         new_meta['crpix2'] = new_meta['crpix2'] - amap.data.shape[1] / 2 + new_fov.shape[1] / 2
 
         # Identify the indices for appending the map original FoV
-        i1 = int(new_fov.shape[0] / 2 - amap.data.shape[0] / 2 + 1)
-        i2 = int(new_fov.shape[0] / 2 + amap.data.shape[0] / 2 + 1)
+        i1 = int(new_fov.shape[0] / 2 - amap.data.shape[0] / 2)
+        i2 = int(new_fov.shape[0] / 2 + amap.data.shape[0] / 2)
 
         # Insert original image in new field of view
         new_fov[i1:i2, i1:i2] = amap.data[:, :]

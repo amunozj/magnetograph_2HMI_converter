@@ -5,6 +5,8 @@ from torch.utils.data import Dataset
 from torch import from_numpy
 from sunpy.map import Map
 from datetime import datetime
+from scipy import stats
+from astropy import units as u
 
 from source.data_utils import get_patch, get_array_radius, map_prep, scale_rotate
 
@@ -48,8 +50,8 @@ class FitsFileDataset(Dataset):
         new_meta = self.map.meta.copy()
 
         # Changing scale and center
-        new_meta['crpix1'] = new_meta['crpix1'] - self.map.data.shape[0] / 2 + self.map.data.shape[0] * scale_factor / 2
-        new_meta['crpix2'] = new_meta['crpix2'] - self.map.data.shape[1] / 2 + self.map.data.shape[1] * scale_factor / 2
+        new_meta['crpix1'] = (new_meta['crpix1'] - self.map.data.shape[0] / 2) * scale_factor + self.map.data.shape[0] * scale_factor / 2
+        new_meta['crpix2'] = (new_meta['crpix2'] - self.map.data.shape[1] / 2) * scale_factor + self.map.data.shape[1] * scale_factor / 2
         new_meta['cdelt1'] = new_meta['cdelt1'] / scale_factor
         new_meta['cdelt2'] = new_meta['cdelt2'] / scale_factor
 
@@ -66,23 +68,24 @@ class FitsFileDataset(Dataset):
         new_meta['naxis2'] = self.map.data.shape[1]
 
         # Changing data info
-        new_meta['datamin'] = np.nanmin(self.map.data)
-        new_meta['datamax'] = np.nanmax(self.map.data)
-        new_meta['data_rms'] = np.sqrt(np.nanmean(self.map.data**2))
-        new_meta['datamean'] = np.nanmean(self.map.data)
-        new_meta['datamedn'] = np.nanmedian(self.map.data)
-        new_meta['dataskew'] = np.nanmedian(self.map.data)
+        new_meta['datamin'] = np.nanmin(new_data)
+        new_meta['datamax'] = np.nanmax(new_data)
+        new_meta['data_rms'] = np.sqrt(np.nanmean((new_data-np.nanmean(new_data))**2))
+        new_meta['datamean'] = np.nanmean(new_data)
+        new_meta['datamedn'] = np.nanmedian(new_data)
+        new_meta['dataskew'] = stats.skew(new_data, axis=None, nan_policy='omit')
+        new_meta['datakurt'] = stats.kurtosis(new_data, axis=None, nan_policy='omit')
 
 
         # Add keywords related to conversion
         try:
-            new_meta['instrume'] = new_meta['instrume'] + '-2HMI_HR'
+            new_meta['instrume'] = new_meta['instrume'] + '_2HMI_HR'
         except:
-            new_meta['instrume'] = new_meta['telescop'] + '-2HMI_HR'
+            new_meta['instrume'] = new_meta['telescop'] + '_2HMI_HR'
 
         new_meta['hrkey1'] = '---------------- HR ML Keywords Section ----------------'
-        new_meta['date-ml'] = str(datetime.utcnow())
-        new_meta['nn-model'] = model_name
+        new_meta['date_ml'] = str(datetime.utcnow())
+        new_meta['nn_model'] = model_name
         new_meta['loss'] = ', '.join('{!s}={!r}'.format(key, val) for (key, val) in config_data['loss'].items())
         new_meta['conv_doi'] = 'https://doi.org/10.5281/zenodo.3750372'
         new_meta['hrkey2'] = '---------------- HR ML Keywords Section ----------------'
@@ -95,6 +98,8 @@ class FitsFileDataset(Dataset):
 
         array_radius = get_array_radius(new_map)
         new_map.data[array_radius >= 1] = padding
+
+
 
         return new_map
 
