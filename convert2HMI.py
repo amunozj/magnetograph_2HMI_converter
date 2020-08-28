@@ -56,6 +56,8 @@ if __name__ == '__main__':
     parser.add_argument('--zero_outside', action='store_true')
     parser.add_argument('--no_rescale', action='store_true')
     parser.add_argument('--compress', action='store_true')
+    parser.add_argument('--checksum', action='store_true')
+    parser.add_argument('--left_right', action='store_true')
 
 
     args = parser.parse_args()
@@ -137,8 +139,13 @@ if __name__ == '__main__':
                 success_sw = True
                 try:
                     logger.info(f'Attempting full disk inference...')
+
                     in_fd = np.stack([file_dset.map.data, get_array_radius(file_dset.map)], axis=0)
+                    if args.left_right:
+                        in_fd = np.flip(in_fd, axis=2).copy()
                     inferred = model.forward(torch.from_numpy(in_fd[None]).to(device).float()).detach().numpy()[0,...]*norm
+                    if args.left_right:
+                        inferred = np.fliplr(inferred).copy()
                     logger.info(f'Success.')
 
                 except Exception as e:
@@ -166,9 +173,9 @@ if __name__ == '__main__':
             if args.compress:
                 hdu = fits.CompImageHDU(inferred_map.data, inferred_map.fits_header)
                 hdu.scale(type='int32', bscale=0.1, bzero=0)
-                hdu.writeto(output_file + '_HR.fits', overwrite=True, checksum=True)
+                hdu.writeto(output_file + '_HR.fits', overwrite=True, checksum=args.checksum)
             else:
-                inferred_map.save(output_file + '_HR.fits', overwrite=True, checksum=True)
+                inferred_map.save(output_file + '_HR.fits', overwrite=True, checksum=args.checksum)
 
             if args.plot:
                 plot_magnetogram(inferred_map, output_file + '_HR.png')
