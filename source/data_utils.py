@@ -44,58 +44,55 @@ def map_prep(file, instrument, *keyward_args):
     # Assemble Sunpy map (compressed fits file so use second hdu)
 
     if len(hdul) == 2:
-
         header = hdul[1].header
-        data = hdul[1].data
+        if instrument == 'MDI-NEW':
+            header['DSUN_REF'] = 149597870691
+
+        sun_map = Map(hdul[1].data, header)
 
     elif len(hdul) == 1:
-        if instrument == 'mdi':
-
+        if instrument == 'MDI-NEW':
             header = hdul[0].header
-            if header['SOLAR_P0']:
-                header['RSUN_OBS'] = header['OBS_R0']
-                header['RSUN_REF'] = 696000000
-                header['CROTA2'] = -header['SOLAR_P0']
-                header['CRVAL1'] = 0.000000
-                header['CRVAL2'] = 0.000000
-                header['CUNIT1'] = 'arcsec'
-                header['CUNIT2'] = 'arcsec'
-                header['DSUN_OBS'] = header['OBS_DIST']
-                header['DSUN_REF'] = 1
+            header['DSUN_REF'] = 149597870691
+        if instrument == 'MDI':
+            header = hdul[0].header
+            header['RSUN_OBS'] = header['OBS_R0']
+            header['RSUN_REF'] = 696000000
+            header['CROTA2'] = -header['SOLAR_P0']
+            header['CRVAL1'] = 0.000000
+            header['CRVAL2'] = 0.000000
+            header['CUNIT1'] = 'arcsec'
+            header['CUNIT2'] = 'arcsec'
+            header['DSUN_OBS'] = header['OBS_DIST']
+            header['DSUN_REF'] = 1
 
-            try:
-                header.pop('SOLAR_P0')
-                header.pop('OBS_DIST')
-                header.pop('OBS_R0')
-            except:
-                pass
+            header.pop('SOLAR_P0')
+            header.pop('OBS_DIST')
+            header.pop('OBS_R0')
 
             data = hdul[0].data
 
-        if instrument == 'gong':
-
+        if instrument == 'GONG':
             header = hdul[0].header
-            if len(header['DATE-OBS'])<22:
-                header['RSUN_OBS'] = header['RADIUS'] * 180 / np.pi * 60 * 60
-                header['RSUN_REF'] = 696000000
-                header['CROTA2'] = 0
-                header['CUNIT1'] = 'arcsec'
-                header['CUNIT2'] = 'arcsec'
-                header['DSUN_OBS'] = header['DISTANCE'] * 149597870691
-                header['DSUN_REF'] = 149597870691
-                header['cdelt1'] = 2.5534
-                header['cdelt2'] = 2.5534
+            header['RSUN_OBS'] = header['RADIUS'] * 180 / np.pi * 60 * 60
+            header['RSUN_REF'] = 696000000
+            header['CROTA2'] = 0
+            header['CUNIT1'] = 'arcsec'
+            header['CUNIT2'] = 'arcsec'
+            header['DSUN_OBS'] = header['DISTANCE'] * 149597870691
+            header['DSUN_REF'] = 149597870691
+            header['cdelt1'] = 2.5534
+            header['cdelt2'] = 2.5534
 
-                header['CTYPE1'] = 'HPLN-TAN'
-                header['CTYPE2'] = 'HPLT-TAN'
+            header['CTYPE1'] = 'HPLN-TAN'
+            header['CTYPE2'] = 'HPLT-TAN'
 
-
-                date = header['DATE-OBS']
-                header['DATE-OBS'] = date[0:4] + '-' + date[5:7] + '-' + date[8:10] + 'T' + header['TIME-OBS'][0:11]
+            date = header['DATE-OBS']
+            header['DATE-OBS'] = date[0:4] + '-' + date[5:7] + '-' + date[8:10] + 'T' + header['TIME-OBS'][0:11]
 
             data = hdul[0].data
 
-        if instrument == 'spmg':
+        if instrument == 'SPMG':
             header = hdul[0].header
             header['cunit1'] = 'arcsec'
             header['cunit2'] = 'arcsec'
@@ -149,7 +146,7 @@ def map_prep(file, instrument, *keyward_args):
             # selecting right layer for data
             data = hdul[0].data[2, :, :]
 
-        if instrument == 'mwo':
+        if instrument == 'MWO':
 
             file_name = file.name
 
@@ -212,12 +209,7 @@ def map_prep(file, instrument, *keyward_args):
             # selecting right layer for data
             data = hdul[0].data
 
-    try:
-        header.pop('checksum')
-        header.pop('datasum')
-    except:
-        pass
-    sun_map = Map(data, header)
+        sun_map = Map(data, header)
 
     return sun_map
 
