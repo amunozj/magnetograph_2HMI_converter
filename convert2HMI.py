@@ -6,9 +6,7 @@ import yaml
 import logging
 
 import numpy as np
-from astropy.io import fits
-import astropy.units as u
-import sunpy.map
+from astropy.io.fits import CompImageHDU
 
 import torch
 from torch.utils.data.dataloader import DataLoader
@@ -171,9 +169,7 @@ if __name__ == '__main__':
             inferred_map = file_dset.create_new_map(inferred, upscale_factor, args.add_noise, model_name, config_data, padding)
 
             if args.compress:
-                hdu = fits.CompImageHDU(inferred_map.data, inferred_map.fits_header)
-                hdu.scale(type='int32', bscale=0.1, bzero=0)
-                hdu.writeto(output_file + '_HR.fits', overwrite=True, checksum=args.checksum)
+                inferred_map.save(output_file + '_HR.fits', overwrite=True, checksum=args.checksum, hdu_type=CompImageHDU)
             else:
                 inferred_map.save(output_file + '_HR.fits', overwrite=True, checksum=args.checksum)
 

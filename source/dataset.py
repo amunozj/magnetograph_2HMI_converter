@@ -24,6 +24,10 @@ class FitsFileDataset(Dataset):
         if rescale and np.abs(1 - (map.meta['cdelt1']/0.504273)/upscale_factor) > 0.01:
             map = scale_rotate(map, target_factor=upscale_factor)
 
+        array_radius = get_array_radius(map)
+        map.data[array_radius >= 1] = 0
+        map.data[np.isnan(map.data)] = 0
+
         self.data = get_patch(map, size)
         self.map = map
 

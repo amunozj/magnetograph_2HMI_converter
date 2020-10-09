@@ -45,10 +45,9 @@ def map_prep(file, instrument, *keyward_args):
 
     if len(hdul) == 2:
         header = hdul[1].header
+        data = hdul[1].data
         if instrument == 'MDI-NEW':
             header['DSUN_REF'] = 149597870691
-
-        sun_map = Map(hdul[1].data, header)
 
     elif len(hdul) == 1:
         if instrument == 'MDI-NEW':
@@ -209,7 +208,7 @@ def map_prep(file, instrument, *keyward_args):
             # selecting right layer for data
             data = hdul[0].data
 
-        sun_map = Map(data, header)
+    sun_map = Map(data, header)
 
     return sun_map
 
@@ -234,9 +233,9 @@ def scale_rotate(amap, target_scale=0.504273, target_factor=0):
         target_factor = np.round(scalex / target_scale)
 
     ratio_plate = target_factor * target_scale / scalex
-    # logger.info(np.round(scalex / target_scale) / scalex * target_scale)
+    logger.info(np.round(scalex / target_scale) / scalex * target_scale)
     ratio_dist = amap.meta['dsun_obs'] / amap.meta['dsun_ref']
-    # logger.info(ratio_dist)
+    logger.info(ratio_dist)
 
     # Pad image, if necessary
     new_shape = int(4096/target_factor)
@@ -261,37 +260,25 @@ def scale_rotate(amap, target_scale=0.504273, target_factor=0):
         # Assemble Sunpy map
         amap = Map(new_fov, new_meta)
 
-    # Rotate solar north up rescale and recenter
+    # Rotate solar north up rescale
     rot_map = amap.rotate(scale=ratio_dist / ratio_plate, recenter=True)
 
-    # Want image the same size as original so use dimension from input map
-    x_scale = ((rot_map.scale.axis1 * amap.dimensions.x) / 2)
-    y_scale = ((rot_map.scale.axis2 * amap.dimensions.y) / 2)
+    rot_map.meta['cdelt1'] = target_factor * target_scale
+    rot_map.meta['cdelt2'] = target_factor * target_scale
+    rot_map.meta['rsun_obs'] = rot_map.meta['rsun_obs'] * ratio_dist
+    rot_map.meta['dsun_obs'] = rot_map.meta['dsun_ref']
 
-    # logger.info(f'x-scale {x_scale}, y-scale {y_scale}')
+    # # Crop the image to desired shape
+    sz_x_diff = (rot_map.data.shape[0]-new_shape)//2
+    sz_y_diff = (rot_map.data.shape[0]-new_shape)//2
 
-    if x_scale != y_scale:
-        logger.error(f'x-scale: {x_scale} and y-scale {y_scale} do not match')
+    rot_map.meta['crpix1'] = rot_map.meta['crpix1']-sz_x_diff
+    rot_map.meta['crpix2'] = rot_map.meta['crpix2']-sz_y_diff
 
-    # Define coordinates
-    bottom_left = SkyCoord(-x_scale, -y_scale, frame=rot_map.coordinate_frame)
-    top_right = SkyCoord(x_scale, y_scale, frame=rot_map.coordinate_frame)
+    rot_map = Map(rot_map.data[sz_x_diff:sz_x_diff+new_shape, sz_y_diff:sz_y_diff+new_shape].copy(), rot_map.meta)
+    print(rot_map.data.shape)
 
-    crop_map = rot_map.submap(bottom_left, top_right)
-
-    # Update Meta
-    crop_map.meta['cdelt1'] = target_factor * target_scale
-    crop_map.meta['cdelt2'] = target_factor * target_scale
-    crop_map.meta['rsun_obs'] = crop_map.meta['rsun_obs'] * ratio_dist
-    crop_map.meta['dsun_obs'] = crop_map.meta['dsun_ref']
-
-    crop_map.meta['im_scale'] = target_factor * target_scale
-    crop_map.meta['fd_scale'] = target_factor * target_scale
-    crop_map.meta['xscale'] = target_factor * target_scale
-    crop_map.meta['yscale'] = target_factor * target_scale
-
-
-    return crop_map
+    return rot_map
 
 
 def get_patch(amap, size):
