@@ -50,8 +50,9 @@ class FitsFileDataset(Dataset):
         new_meta = self.map.meta.copy()
 
         # Changing scale and center
-        new_meta['crpix1'] = (new_meta['crpix1'] - self.map.data.shape[0] / 2) * scale_factor + self.map.data.shape[0] * scale_factor / 2
-        new_meta['crpix2'] = (new_meta['crpix2'] - self.map.data.shape[1] / 2) * scale_factor + self.map.data.shape[1] * scale_factor / 2
+        new_meta['crpix1'] = (new_meta['crpix1'] - self.map.data.shape[0] / 2 - 0.5) * scale_factor + self.map.data.shape[0] * scale_factor / 2 + 0.5
+        new_meta['crpix2'] = (new_meta['crpix2'] - self.map.data.shape[1] / 2 - 0.5) * scale_factor + self.map.data.shape[1] * scale_factor / 2 + 0.5
+
         new_meta['cdelt1'] = new_meta['cdelt1'] / scale_factor
         new_meta['cdelt2'] = new_meta['cdelt2'] / scale_factor
 
