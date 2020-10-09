@@ -123,7 +123,7 @@ if __name__ == '__main__':
 
         logger.info(f'Processing {file}')
 
-        output_file = args.destination + '/' + '.'.join(file.split('/')[-1].split('.gz')[0].split('.')[0:-1])
+        output_file = args.destination + '.'.join(file.replace(args.data_path,'').split('.gz')[0].split('.')[0:-1])
         if os.path.exists(output_file + '_HR.fits') and not args.overwrite:
             logger.info(f'{file} already exists')
 
