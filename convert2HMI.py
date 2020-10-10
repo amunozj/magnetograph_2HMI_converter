@@ -7,6 +7,7 @@ import logging
 
 import numpy as np
 from astropy.io.fits import CompImageHDU
+from astropy.io import fits
 
 import torch
 from torch.utils.data.dataloader import DataLoader
@@ -124,6 +125,8 @@ if __name__ == '__main__':
         logger.info(f'Processing {file}')
 
         output_file = args.destination + '.'.join(file.replace(args.data_path,'').split('.gz')[0].split('.')[0:-1])
+        os.makedirs('/'.join(output_file.split('/')[0:-1]), exist_ok=True)
+
         if os.path.exists(output_file + '_HR.fits') and not args.overwrite:
             logger.info(f'{file} already exists')
 
@@ -169,7 +172,9 @@ if __name__ == '__main__':
             inferred_map = file_dset.create_new_map(inferred, upscale_factor, args.add_noise, model_name, config_data, padding)
 
             if args.compress:
-                inferred_map.save(output_file + '_HR.fits', overwrite=True, checksum=args.checksum, hdu_type=CompImageHDU)
+                hdu = fits.CompImageHDU(inferred_map.data, inferred_map.fits_header)
+                hdu.scale(type='int32', bscale=0.1, bzero=0)
+                hdu.writeto(output_file + '_HR.fits', overwrite=True, checksum=args.checksum)
             else:
                 inferred_map.save(output_file + '_HR.fits', overwrite=True, checksum=args.checksum)
 

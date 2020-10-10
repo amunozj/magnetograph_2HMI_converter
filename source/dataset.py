@@ -24,7 +24,7 @@ class FitsFileDataset(Dataset):
         if rescale and np.abs(1 - (map.meta['cdelt1']/0.504273)/upscale_factor) > 0.01:
             map = scale_rotate(map, target_factor=upscale_factor)
         else:
-            map = map.rotate(recenter=True)
+            map = scale_rotate(map, target_factor=0)
 
         array_radius = get_array_radius(map)
         map.data[array_radius >= 1] = 0

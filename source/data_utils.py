@@ -46,8 +46,7 @@ def map_prep(file, instrument, *keyward_args):
     if len(hdul) == 2:
         header = hdul[1].header
         data = hdul[1].data
-        if instrument == 'MDI-NEW':
-            header['DSUN_REF'] = 149597870691
+        header['DSUN_REF'] = 149597870691
 
     elif len(hdul) == 1:
         if instrument == 'MDI-NEW':
@@ -228,17 +227,21 @@ def scale_rotate(amap, target_scale=0.504273, target_factor=0):
     scalex = amap.meta['cdelt1']
     scaley = amap.meta['cdelt2']
 
-    # Calculate target factor if not provided
+
+
+    # Set ratios to 1 if no scalin is done
     if target_factor == 0:
-        target_factor = np.round(scalex / target_scale)
+        ratio_plate = 1
+        ratio_dist = 1
+        new_shape = amap.data.shape[0]
 
-    ratio_plate = target_factor * target_scale / scalex
-    logger.info(np.round(scalex / target_scale) / scalex * target_scale)
-    ratio_dist = amap.meta['dsun_obs'] / amap.meta['dsun_ref']
-    logger.info(ratio_dist)
-
-    # Pad image, if necessary
-    new_shape = int(4096/target_factor)
+    else:
+        ratio_plate = target_factor * target_scale / scalex
+        logger.info(np.round(scalex / target_scale) / scalex * target_scale)
+        ratio_dist = amap.meta['dsun_obs'] / amap.meta['dsun_ref']
+        logger.info(ratio_dist)
+        # Pad image, if necessary
+        new_shape = int(4096 / target_factor)
 
     # Reform map to new size if original shape is too small
 
@@ -263,10 +266,11 @@ def scale_rotate(amap, target_scale=0.504273, target_factor=0):
     # Rotate solar north up rescale
     rot_map = amap.rotate(scale=ratio_dist / ratio_plate, recenter=True)
 
-    rot_map.meta['cdelt1'] = target_factor * target_scale
-    rot_map.meta['cdelt2'] = target_factor * target_scale
-    rot_map.meta['rsun_obs'] = rot_map.meta['rsun_obs'] * ratio_dist
-    rot_map.meta['dsun_obs'] = rot_map.meta['dsun_ref']
+    if target_factor != 0:
+        rot_map.meta['cdelt1'] = target_factor * target_scale
+        rot_map.meta['cdelt2'] = target_factor * target_scale
+        rot_map.meta['rsun_obs'] = rot_map.meta['rsun_obs'] * ratio_dist
+        rot_map.meta['dsun_obs'] = rot_map.meta['dsun_ref']
 
     # # Crop the image to desired shape
     sz_x_diff = (rot_map.data.shape[0]-new_shape)//2
