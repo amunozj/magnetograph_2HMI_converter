@@ -2,6 +2,9 @@
 
 Currently only working on magnetograms taken by the Michelson Doppler Imager (MDI) on board the Solar and Heliospheric Observatory (SoHO) or the Global Oscillation Network Group (GONG).  Output magnetograms have the resolution and systematics of magnetograms taken by the Helioseismic and Magnetic Imager (HMI) on board the Solar Dynamics Observatory (SDO).
 
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3750372.svg)](https://doi.org/10.5281/zenodo.3750372)
+
 ## Installation
 
 1. Click on the _Clone or download_ button and clone it to a repository or download it as a zip file.
@@ -47,9 +50,9 @@ The converter magnetogram contains the following added keywords:
 
 ***'--use_patches'***:  Run inference on magnetogram patches instead of the default full disk inference.
 
-***'--zero_outside'***: Padd outside the solar disk using zeros.  Default *np.nan*.
+***'--zero_outside'***: Pad outside the solar disk using zeros.  Default *np.nan*.
 
 ***'--no_rescale'***: Don't rescale the magnetogram before running inference.  By default the magnetogram is rotated and scaled to a standard plate scale that is a multiple of HMI's mean plate scale of 0.504273/pixel. 
 
 ## Example:
->python convert2HMI.py --instrument mdi --data_path /tmp/gong/input --destination /tmp/gong/output --use_patches --overwrite --plot
+>python convert2HMI.py --instrument mdi --data_path /tmp/mdi/input --destination /tmp/mdi/output --use_patches --overwrite --plot
