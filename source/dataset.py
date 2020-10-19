@@ -61,6 +61,7 @@ class FitsFileDataset(Dataset):
 
         new_meta['cdelt1'] = new_meta['cdelt1'] / scale_factor
         new_meta['cdelt2'] = new_meta['cdelt2'] / scale_factor
+        new_meta['r_sun'] = new_meta['r_sun'] * scale_factor
 
         try:
             new_meta['im_scale'] = new_meta['im_scale'] / scale_factor
