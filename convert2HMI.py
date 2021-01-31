@@ -46,26 +46,43 @@ if __name__ == '__main__':
     logger = get_logger(__name__)
     parser = argparse.ArgumentParser()
     parser.add_argument('--instrument', required=True)
-    parser.add_argument('--data_path')
-    parser.add_argument('--destination')
+    parser.add_argument('--data_path', required=True)
+    parser.add_argument('--destination', required=True)
     parser.add_argument('--add_noise')
+    parser.add_argument('--scale_factor')
     parser.add_argument('--plot', action='store_true')
     parser.add_argument('--overwrite', action='store_true')
     parser.add_argument('--use_patches', action='store_true')
     parser.add_argument('--zero_outside', action='store_true')
-    parser.add_argument('--no_rescale', action='store_true')
     parser.add_argument('--compress', action='store_true')
     parser.add_argument('--checksum', action='store_true')
     parser.add_argument('--left_right', action='store_true')
 
-
     args = parser.parse_args()
-    instrument = args.instrument.lower()
 
+    scale_factor = 1
+    if args.scale_factor:
+        scale_factor = args.scale_factor
+
+    if scale_factor != 1 or scale_factor != 2 or scale_factor != 4:
+        raise RuntimeError(f'Only scale factors of 1, 2, or 4 are valid')
+
+    instrument = args.instrument.lower()
     if instrument == 'mdi':
-        run = 'checkpoints/mdi/20200501145532_HighResNet_RPRCDO_SSIMGradHistLoss_mdi_18_jsoc'
+        if scale_factor == 1:
+            run = 'checkpoints/mdi/20201019151521_HighResNet_RPRCDO_SSIMGradHistLoss_jsoc_RP_D1_18'
+        if scale_factor == 2:
+            run = 'checkpoints/mdi/20201018212214_HighResNet_RPRCDO_SSIMGradHistLoss_jsoc_RP_D2_18'
+        if scale_factor == 4:
+            run = 'checkpoints/mdi/20201020035600_HighResNet_RPRCDO_SSIMGradHistLoss_jsoc_RP_Neg_19'
+
     elif instrument == 'gong':
-        run = 'checkpoints/gong/20200321142757_HighResNet_RPRCDO_SSIMGradHistLoss_gong_1'
+        if scale_factor == 1:
+            run = 'checkpoints/gong/20201214200251_HighResNet_RPRCDO_SSIMGradHistLoss_gong_RP_19'
+        if scale_factor == 2:
+            run = 'checkpoints/gong/20201214200251_HighResNet_RPRCDO_SSIMGradHistLoss_gong_RP_19'
+        if scale_factor == 4:
+            run = 'checkpoints/gong/20201214200251_HighResNet_RPRCDO_SSIMGradHistLoss_gong_RP_19'
     else:
         raise RuntimeError(f'mdi and gong are the only valid instruments.')
 
@@ -81,15 +98,8 @@ if __name__ == '__main__':
     if args.zero_outside:
         padding = 0
 
-    rescale = True
-    if args.no_rescale:
-        rescale = False
-
     net_config = config_data['net']
     model_name = net_config['name']
-    upscale_factor = 4
-    if 'upscale_factor' in net_config.keys():
-        upscale_factor = net_config['upscale_factor']
 
     model = BaseScaler.from_dict(config_data)
 
@@ -132,7 +142,7 @@ if __name__ == '__main__':
 
         else:
 
-            file_dset = FitsFileDataset(file, 32, norm, instrument, rescale, upscale_factor)
+            file_dset = FitsFileDataset(file, 32, norm, instrument, scale_factor)
 
             # Try full disk
             success_sw = False
@@ -169,7 +179,7 @@ if __name__ == '__main__':
                 inferred = get_image_from_array(output_patches)
                 logger.info(f'Success.')
 
-            inferred_map = file_dset.create_new_map(inferred, upscale_factor, args.add_noise, model_name, config_data, padding)
+            inferred_map = file_dset.create_new_map(inferred, scale_factor, args.add_noise, model_name, config_data, padding)
 
             if args.compress:
                 hdu = fits.CompImageHDU(inferred_map.data, inferred_map.fits_header)

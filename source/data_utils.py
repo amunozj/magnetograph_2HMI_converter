@@ -208,6 +208,7 @@ def map_prep(file, instrument, *keyward_args):
             data = hdul[0].data
 
     sun_map = Map(data, header)
+    sun_map = sun_map.rotate()
 
     return sun_map
 
