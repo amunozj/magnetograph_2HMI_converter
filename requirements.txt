@@ -15,6 +15,6 @@ torchvision==0.3.0
 tensorboard==1.14.0
 tensorboardX==1.8
 gitpython==3.1.0
-tensorflow==1.15.4
+tensorflow==2.4.0
 scikit-learn==0.21.3
 gcsfs==0.2.3
