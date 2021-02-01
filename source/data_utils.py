@@ -81,6 +81,7 @@ def map_prep(file, instrument, *keyward_args):
             header['DSUN_REF'] = 149597870691
             header['cdelt1'] = 2.5534
             header['cdelt2'] = 2.5534
+            header['R_SUN'] = header['RSUN_OBS']/header['cdelt2']
 
             header['CTYPE1'] = 'HPLN-TAN'
             header['CTYPE2'] = 'HPLT-TAN'
