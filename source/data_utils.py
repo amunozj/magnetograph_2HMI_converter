@@ -1,3 +1,5 @@
+from typing import List, Any, Union
+
 import numpy as np
 import math
 
@@ -5,7 +7,7 @@ import datetime
 from astropy import units as u
 from sklearn.feature_extraction import image
 from astropy.coordinates import SkyCoord
-from sunpy.map import Map
+from sunpy.map import Map, CompositeMap, MapSequence, GenericMap
 from astropy.io import fits
 from astropy.time import Time
 from astropy.coordinates import solar_system_ephemeris, EarthLocation, get_body
@@ -207,8 +209,8 @@ def map_prep(file, instrument, *keyward_args):
             # selecting right layer for data
             data = hdul[0].data
 
-    sun_map = Map(data, header)
-    sun_map = sun_map.rotate()
+    sun_map: Union[Union[MapSequence, CompositeMap, GenericMap, List[Union[GenericMap, Any]]], Any] = Map(data, header)
+    # sun_map = sun_map.rotate()
 
     return sun_map
 

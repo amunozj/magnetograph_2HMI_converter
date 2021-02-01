@@ -62,9 +62,9 @@ if __name__ == '__main__':
 
     scale_factor = 1
     if args.scale_factor:
-        scale_factor = args.scale_factor
+        scale_factor = int(args.scale_factor)
 
-    if scale_factor != 1 or scale_factor != 2 or scale_factor != 4:
+    if not(scale_factor == 1 or scale_factor == 2 or scale_factor == 4):
         raise RuntimeError(f'Only scale factors of 1, 2, or 4 are valid')
 
     instrument = args.instrument.lower()
@@ -142,7 +142,7 @@ if __name__ == '__main__':
 
         else:
 
-            file_dset = FitsFileDataset(file, 32, norm, instrument, scale_factor)
+            file_dset = FitsFileDataset(file, 32, norm, instrument)
 
             # Try full disk
             success_sw = False
