@@ -49,10 +49,10 @@ def map_prep(file, instrument, *keyward_args):
         header['DSUN_REF'] = 149597870691
 
     elif len(hdul) == 1:
-        if instrument == 'MDI-NEW':
+        if instrument == 'mdi-new':
             header = hdul[0].header
             header['DSUN_REF'] = 149597870691
-        if instrument == 'MDI':
+        if instrument == 'mdi':
             header = hdul[0].header
             header['RSUN_OBS'] = header['OBS_R0']
             header['RSUN_REF'] = 696000000
@@ -70,7 +70,7 @@ def map_prep(file, instrument, *keyward_args):
 
             data = hdul[0].data
 
-        if instrument == 'GONG':
+        if instrument == 'gong':
             header = hdul[0].header
             header['RSUN_OBS'] = header['RADIUS'] * 180 / np.pi * 60 * 60
             header['RSUN_REF'] = 696000000
@@ -90,7 +90,7 @@ def map_prep(file, instrument, *keyward_args):
 
             data = hdul[0].data
 
-        if instrument == 'SPMG':
+        if instrument == 'spmg':
             header = hdul[0].header
             header['cunit1'] = 'arcsec'
             header['cunit2'] = 'arcsec'
@@ -144,7 +144,7 @@ def map_prep(file, instrument, *keyward_args):
             # selecting right layer for data
             data = hdul[0].data[2, :, :]
 
-        if instrument == 'MWO':
+        if instrument == 'mwo':
 
             file_name = file.name
 
