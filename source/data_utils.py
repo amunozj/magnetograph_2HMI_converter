@@ -71,23 +71,25 @@ def map_prep(file, instrument, *keyward_args):
             data = hdul[0].data
 
         if instrument == 'gong':
+
+            ## Update header to make it useful
             header = hdul[0].header
-            header['RSUN_OBS'] = header['RADIUS'] * 180 / np.pi * 60 * 60
+            header['RSUN_OBS'] = (header['RADIUS'] * u.rad).to(u.arcsec).value
             header['RSUN_REF'] = 696000000
             header['CROTA2'] = 0
             header['CUNIT1'] = 'arcsec'
             header['CUNIT2'] = 'arcsec'
-            header['DSUN_OBS'] = header['DISTANCE'] * 149597870691
             header['DSUN_REF'] = 149597870691
-            header['cdelt1'] = 2.5534
-            header['cdelt2'] = 2.5534
-            header['R_SUN'] = header['RSUN_OBS']/header['cdelt2']
-
+            header['DSUN_OBS'] = header['DSUN_REF'] * header['DISTANCE']
+            header['cdelt1'] = 2.5310 + 0.0005
+            header['cdelt2'] = 2.5310 + 0.0005
+            header['crpix1'] = header['FNDLMBXC'] + 0.5
+            header['crpix2'] = header['FNDLMBYC'] + 0.5
+            header['R_SUN'] = header['RSUN_OBS'] / header['cdelt2']
             header['CTYPE1'] = 'HPLN-TAN'
             header['CTYPE2'] = 'HPLT-TAN'
-
             date = header['DATE-OBS']
-            header['DATE-OBS'] = date[0:4] + '-' + date[5:7] + '-' + date[8:10] + 'T' + header['TIME-OBS'][0:11]
+            header['DATE-OBS'] = date[0:4] + '-' + date[5:7] + '-' + date[8:10] + 'T' + header['TIME-OBS'][0:11] + '0'
 
             data = hdul[0].data
 
@@ -307,10 +309,10 @@ def get_patch(amap, size):
     """
     array_radius = get_array_radius(amap)
 
-    patches = image.extract_patches(amap.data, (size, size), extraction_step=size)
+    patches = image._extract_patches(amap.data, (size, size), extraction_step=size)
     patches = patches.reshape([-1] + list((size, size)))
 
-    patches_r = image.extract_patches(array_radius, (size, size), extraction_step=size)
+    patches_r = image._extract_patches(array_radius, (size, size), extraction_step=size)
     patches_r = patches_r.reshape([-1] + list((size, size)))
 
     return np.stack([patches, patches_r], axis=1)

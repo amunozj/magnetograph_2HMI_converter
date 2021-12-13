@@ -70,19 +70,19 @@ if __name__ == '__main__':
     instrument = args.instrument.lower()
     if instrument == 'mdi':
         if scale_factor == 1:
-            run = 'checkpoints/mdi/20201019151521_HighResNet_RPRCDO_SSIMGradHistLoss_jsoc_RP_D1_18'
+            run = './checkpoints/mdi/20210207214138_HighResNet_RPRCDO_SSIMGradHistLoss_jsoc_mdi_RP_D1_19'
         if scale_factor == 2:
-            run = 'checkpoints/mdi/20201018212214_HighResNet_RPRCDO_SSIMGradHistLoss_jsoc_RP_D2_18'
+            run = './checkpoints/mdi/20210209000430_HighResNet_RPRCDO_SSIMGradHistLoss_jsoc_mdi_RP_D2_18'
         if scale_factor == 4:
-            run = 'checkpoints/mdi/20201020035600_HighResNet_RPRCDO_SSIMGradHistLoss_jsoc_RP_Neg_19'
+            run = './checkpoints/mdi/20201020035600_HighResNet_RPRCDO_SSIMGradHistLoss_jsoc_mdi_RP_19'
 
     elif instrument == 'gong':
         if scale_factor == 1:
-            run = 'checkpoints/gong/20201214200251_HighResNet_RPRCDO_SSIMGradHistLoss_gong_RP_19'
+            run = './checkpoints/gong/20201214200251_HighResNet_RPRCDO_SSIMGradHistLoss_gong_RP_19'
         if scale_factor == 2:
-            run = 'checkpoints/gong/20201214200251_HighResNet_RPRCDO_SSIMGradHistLoss_gong_RP_19'
+            run = './checkpoints/gong/20201214200251_HighResNet_RPRCDO_SSIMGradHistLoss_gong_RP_19'
         if scale_factor == 4:
-            run = 'checkpoints/gong/20201214200251_HighResNet_RPRCDO_SSIMGradHistLoss_gong_RP_19'
+            run = './checkpoints/gong/20201214200251_HighResNet_RPRCDO_SSIMGradHistLoss_gong_RP_19'
     else:
         raise RuntimeError(f'mdi and gong are the only valid instruments.')
 
