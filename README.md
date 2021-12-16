@@ -11,7 +11,11 @@ Currently only working on magnetograms taken by the Michelson Doppler Imager (MD
 
 ![GitHub Logo](https://help.github.com/assets/images/help/repository/clone-repo-clone-url-button.png)
 
-2. Install dependencies:
+2. Install dependencies using conda:
+
+> conda env create -f environment.yml
+
+Or Pip
 
 > pip install -r requirements.txt --user
 
