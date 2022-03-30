@@ -78,9 +78,9 @@ if __name__ == '__main__':
 
     elif instrument == 'gong':
         if scale_factor == 1:
-            run = './checkpoints/gong/20201214200251_HighResNet_RPRCDO_SSIMGradHistLoss_gong_RP_19'
+            run = './checkpoints/gong/20210129203433_HighResNet_RPRCDO_SSIMGradHistLoss_gong_RP_D1_19'
         if scale_factor == 2:
-            run = './checkpoints/gong/20201214200251_HighResNet_RPRCDO_SSIMGradHistLoss_gong_RP_19'
+            run = './checkpoints/gong/20210206064501_HighResNet_RPRCDO_SSIMGradHistLoss_gong_RP_D2_2'
         if scale_factor == 4:
             run = './checkpoints/gong/20201214200251_HighResNet_RPRCDO_SSIMGradHistLoss_gong_RP_19'
     else:
