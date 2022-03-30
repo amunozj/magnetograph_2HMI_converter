@@ -11,7 +11,11 @@ Currently only working on magnetograms taken by the Michelson Doppler Imager (MD
 
 ![GitHub Logo](https://help.github.com/assets/images/help/repository/clone-repo-clone-url-button.png)
 
-2. Install dependencies:
+2. Install dependencies using conda:
+
+> conda env create -f environment.yml
+
+Or Pip
 
 > pip install -r requirements.txt --user
 
@@ -51,8 +55,6 @@ The converter magnetogram contains the following added keywords:
 ***'--use_patches'***:  Run inference on magnetogram patches instead of the default full disk inference.
 
 ***'--zero_outside'***: Pad outside the solar disk using zeros.  Default *np.nan*.
-
-***'--no_rescale'***: Don't rescale the magnetogram before running inference.  By default the magnetogram is rotated and scaled to a standard plate scale that is a multiple of HMI's mean plate scale of 0.504273/pixel. 
 
 ## Example:
 >python convert2HMI.py --instrument mdi --data_path /tmp/mdi/input --destination /tmp/mdi/output --use_patches --overwrite --plot
